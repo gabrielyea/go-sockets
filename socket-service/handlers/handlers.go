@@ -12,6 +12,7 @@ var wsConn *websocket.Conn
 
 type Ihandler interface {
 	WScable(http.ResponseWriter, *http.Request)
+	Home(http.ResponseWriter, *http.Request)
 }
 
 type handler struct{}
@@ -28,7 +29,7 @@ func (h *handler) WScable(w http.ResponseWriter, r *http.Request) {
 	upgrader.CheckOrigin = func(r *http.Request) bool {
 		return true
 	}
-	fmt.Printf("Web socket open and waiting for messages")
+	fmt.Printf("Web socket open and waiting for messages \n")
 	wsConn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		fmt.Printf("err: %v\n", err.Error())
@@ -39,16 +40,24 @@ func (h *handler) WScable(w http.ResponseWriter, r *http.Request) {
 		var data Data
 		err := wsConn.ReadJSON(&data)
 		if err != nil {
-			fmt.Printf("err: %v\n", "did not get a json string with correct structure... probably")
+			res := fmt.Sprintf("connection was closed... probably %s", err.Error())
+			fmt.Printf("error: %v\n", res)
+			h.SendMessage(wsConn, "something went wrong!")
 			return
 		}
+		h.SendMessage(wsConn, data.Message)
 	}
 }
 
 func (h *handler) SendMessage(ws *websocket.Conn, msg string) {
-	err := ws.WriteMessage(websocket.TextMessage, []byte(msg))
+	res := fmt.Sprintf("message from GO: %s \n", msg)
+	err := ws.WriteMessage(websocket.TextMessage, []byte(res))
 	if err != nil {
 		fmt.Printf("err: %v\n", "could not send message with ws")
 		return
 	}
+}
+
+func (h *handler) Home(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprint(w, "hello from home")
 }

@@ -12,6 +12,7 @@ func main() {
 	router := mux.NewRouter()
 	h := handlers.NewHandler()
 	router.HandleFunc("/socket", h.WScable)
-	fmt.Printf("Running socket on port :8000")
+	router.HandleFunc("/", h.Home)
+	fmt.Printf("Running socket on port :8000 \n")
 	http.ListenAndServe(":8000", router)
 }
